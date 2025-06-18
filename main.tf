@@ -53,43 +53,7 @@ module "vpc" {
   tags = var.common_tags
 }
 
-# RANDOM PASSWORD FOR DATABASE
-resource "random_password" "db_password" {
-  length           = 16
-  special          = true
-  override_special = "!#$%^&*()_+-=[]{}|;':,.<>?"
-}
 
-# AWS SECRETS MANAGER
-resource "aws_secretsmanager_secret" "db_credentials" {
-  name = "${var.project_name}-db-credentials"
-  tags = var.common_tags
-}
-
-resource "aws_secretsmanager_secret_version" "db_credentials" {
-  secret_id     = aws_secretsmanager_secret.db_credentials.id
-  secret_string = <<EOF
-    {
-      "username": "${var.db_username}",
-      "password": "${random_password.db_password.result}"
-    }
-  EOF
-}
-
-# RDS DATABASE MODULE
-module "rds" {
-  source = "./modules/rds"
-
-  project_name         = var.project_name
-  database_subnet_ids  = module.vpc.database_subnet_ids
-  db_security_group_id = module.vpc.database_security_group_id
-
-  db_name     = var.db_name
-  db_username = var.db_username
-  db_password = random_password.db_password.result
-
-  tags = var.common_tags
-}
 
 # IAM ROLE FOR EC2
 resource "aws_iam_role" "ec2_role" {
@@ -111,21 +75,7 @@ resource "aws_iam_role" "ec2_role" {
   tags = var.common_tags
 }
 
-resource "aws_iam_role_policy" "secrets_manager_access" {
-  name = "${var.project_name}-secrets-manager-access"
-  role = aws_iam_role.ec2_role.id
 
-  policy = jsonencode({
-    Version   = "2012-10-17"
-    Statement = [
-      {
-        Action   = "secretsmanager:GetSecretValue"
-        Effect   = "Allow"
-        Resource = aws_secretsmanager_secret.db_credentials.arn
-      }
-    ]
-  })
-}
 
 resource "aws_iam_role_policy_attachment" "ssm_policy" {
   role       = aws_iam_role.ec2_role.name
@@ -144,6 +94,7 @@ module "ec2" {
   instance_type        = var.instance_type
   key_name             = var.key_name
   private_subnet_ids   = module.vpc.private_subnet_ids
+  public_subnet_ids    = module.vpc.public_subnet_ids
   security_group_id    = module.vpc.ec2_security_group_id
   availability_zones   = data.aws_availability_zones.available.names
   iam_instance_profile = aws_iam_instance_profile.ec2_profile.name

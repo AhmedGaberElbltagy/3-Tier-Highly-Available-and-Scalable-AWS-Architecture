@@ -33,24 +33,16 @@ output "project_name" {
   value       = var.project_name
 }
 
+output "bastion_public_ip" {
+  description = "Public IP of the bastion host"
+  value       = module.ec2.bastion_public_ip
+}
+
 output "aws_region" {
   description = "The AWS region where resources are deployed."
   value       = var.aws_region
 }
 
 
-output "db_host" {
-  description = "The endpoint of the RDS database."
-  value       = module.rds.db_instance_endpoint
-}
 
-output "db_port" {
-  description = "The port of the RDS database."
-  value       = module.rds.db_instance_port
-}
-
-output "db_name" {
-  description = "The name of the RDS database."
-  value       = module.rds.db_instance_name
-}
 

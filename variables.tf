@@ -58,17 +58,7 @@ variable "project_name" {
   default     = "fullstack-app"
 }
 
-variable "db_name" {
-  description = "The name of the database"
-  type        = string
-  default     = "webappdb"
-}
 
-variable "db_username" {
-  description = "The username for the database"
-  type        = string
-  default     = "dbadmin"
-}
 
 variable "common_tags" {
   description = "Common tags for all resources"
