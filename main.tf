@@ -99,22 +99,27 @@ module "ec2" {
   app_security_group_id = module.vpc.app_security_group_id
   availability_zones    = data.aws_availability_zones.available.names
   iam_instance_profile  = aws_iam_instance_profile.ec2_profile.name
+  internal_app_tg_arn   = module.alb.internal_app_tg_arn
+  internal_alb_dns_name = module.alb.internal_alb_dns_name
+  web_target_group_arn  = module.alb.web_target_group_arn
   tags                  = var.common_tags
+  app_code_path         = "${path.root}/code/backend"
+  web_code_path         = "${path.root}/code/frontend"
 }
 
 # ALB Module
 module "alb" {
   source = "./modules/alb"
 
-  alb_name                = "${var.project_name}-alb"
-  web_target_group_name   = "${var.project_name}-web-tg"
-  app_target_group_name   = "${var.project_name}-app-tg"
-  vpc_id                  = module.vpc.vpc_id
-  public_subnet_ids       = module.vpc.public_subnet_ids
-  alb_security_group_id   = module.vpc.alb_security_group_id
-  web_server_instance_ids = module.ec2.web_server_instance_ids
-  app_server_instance_ids = module.ec2.app_server_instance_ids
-  tags                    = var.common_tags
+  alb_name                         = "${var.project_name}-alb"
+  web_target_group_name            = "${var.project_name}-web-tg"
+  app_target_group_name            = "${var.project_name}-app-tg"
+  vpc_id                           = module.vpc.vpc_id
+  public_subnet_ids                = module.vpc.public_subnet_ids
+  private_subnet_ids               = module.vpc.private_subnet_ids
+  alb_security_group_id            = module.vpc.alb_security_group_id
+  internal_alb_security_group_id   = module.vpc.internal_alb_security_group_id
+  tags                             = var.common_tags
 }
 
 

@@ -42,3 +42,7 @@ output "app_security_group_id" {
   description = "The ID of the App Tier security group"
   value       = aws_security_group.app.id
 }
+
+output "internal_alb_security_group_id" {
+  value = aws_security_group.internal_alb_sg.id
+}

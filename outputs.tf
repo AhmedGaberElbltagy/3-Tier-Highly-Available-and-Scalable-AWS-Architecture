@@ -13,16 +13,6 @@ output "public_subnet_ids" {
   value       = module.vpc.public_subnet_ids
 }
 
-output "web_server_instance_ids" {
-  description = "IDs of the web server EC2 instances"
-  value       = module.ec2.web_server_instance_ids
-}
-
-output "app_server_instance_ids" {
-  description = "IDs of the app server EC2 instances"
-  value       = module.ec2.app_server_instance_ids
-}
-
 output "alb_dns_name" {
   description = "DNS name of the load balancer"
   value       = module.alb.alb_dns_name
@@ -36,11 +26,6 @@ output "alb_zone_id" {
 output "project_name" {
   description = "The name of the project, used for naming resources."
   value       = var.project_name
-}
-
-output "bastion_public_ip" {
-  description = "Public IP of the bastion host"
-  value       = module.ec2.bastion_public_ip
 }
 
 output "aws_region" {

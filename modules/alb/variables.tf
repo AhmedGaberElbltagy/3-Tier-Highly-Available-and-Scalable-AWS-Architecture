@@ -28,19 +28,18 @@ variable "alb_security_group_id" {
   type        = string
 }
 
-variable "web_server_instance_ids" {
-  description = "A list of web server instance IDs to attach to the web target group."
-  type        = list(string)
-}
-
-variable "app_server_instance_ids" {
-  description = "A list of app server instance IDs to attach to the app target group."
-  type        = list(string)
-  default     = []
-}
-
 variable "tags" {
-  description = "Common tags for all resources"
+  description = "A map of tags to add to all resources."
   type        = map(string)
   default     = {}
+}
+
+variable "internal_alb_security_group_id" {
+  description = "The ID of the security group for the internal ALB"
+  type        = string
+}
+
+variable "private_subnet_ids" {
+  description = "A list of private subnet IDs"
+  type        = list(string)
 }
