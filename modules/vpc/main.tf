@@ -80,22 +80,6 @@ resource "aws_subnet" "private" {
 }
 
 # Database Subnets
-resource "aws_subnet" "database" {
-  count = length(var.database_subnet_cidrs)
-
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.database_subnet_cidrs[count.index]
-  availability_zone = var.availability_zones[count.index]
-
-  tags = merge(var.tags, {
-    Name = "${var.vpc_name}-database-subnet-${count.index + 1}"
-    Tier = "database"
-    Type = "Subnet"
-  })
-}
-
-# NAT Gateways removed - no outbound internet access needed
-
 # Route Tables
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
@@ -113,7 +97,7 @@ resource "aws_route_table" "public" {
   })
 }
 
-# Private route table - no internet gateway route needed
+# Private route table
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
@@ -126,7 +110,7 @@ resource "aws_route_table" "private" {
     Name        = "${var.vpc_name}-private-route-table"
     Type        = "RouteTable"
     Tier        = "private"
-    Description = "Route table for private subnets (no internet access)"
+    Description = "Route table for private subnets with NAT gateway access"
   })
 }
 
@@ -145,76 +129,12 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 }
 
-# Security Group for EC2 instances
-resource "aws_security_group" "ec2" {
-  name        = "${var.vpc_name}-ec2-security-group"
-  description = "Security group for EC2 web servers in private subnets"
-  vpc_id      = aws_vpc.main.id
 
-  ingress {
-    description     = "HTTP traffic from ALB only"
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
-  }
-
-  ingress {
-    description = "SSH access from within VPC"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr]
-  }
-
-  egress {
-    description = "All outbound traffic (limited by route table)"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(var.tags, {
-    Name        = "${var.vpc_name}-ec2-security-group"
-    Type        = "SecurityGroup"
-    Tier        = "private"
-    Description = "Security group for EC2 instances - allows HTTP from ALB and SSH from VPC"
-  })
-}
-
-# Security Group for RDS
-resource "aws_security_group" "database" {
-  name        = "${var.vpc_name}-database-security-group"
-  description = "Security group for RDS database"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    description     = "PostgreSQL from EC2 instances"
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [aws_security_group.ec2.id]
-  }
-
-  egress {
-    description = "All outbound traffic"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(var.tags, {
-    Name = "${var.vpc_name}-database-security-group"
-    Type = "SecurityGroup"
-    Tier = "database"
-  })
-}
+# --- Security Groups for 2-Tier Architecture ---
 
 # Security Group for ALB
 resource "aws_security_group" "alb" {
-  name        = "${var.vpc_name}-alb-security-group"
+  name        = "${var.vpc_name}-alb-sg"
   description = "Security group for Application Load Balancer"
   vpc_id      = aws_vpc.main.id
 
@@ -243,9 +163,76 @@ resource "aws_security_group" "alb" {
   }
 
   tags = merge(var.tags, {
-    Name        = "${var.vpc_name}-alb-security-group"
-    Type        = "SecurityGroup"
-    Tier        = "public"
-    Description = "Security group for ALB - allows HTTP/HTTPS from internet"
+    Name = "${var.vpc_name}-alb-sg"
+  })
+}
+
+# Security Group for Web Tier
+resource "aws_security_group" "web" {
+  name        = "${var.vpc_name}-web-sg"
+  description = "Security group for web servers"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description     = "HTTP from ALB"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  ingress {
+    description = "SSH from within VPC"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  egress {
+    description = "All outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.vpc_name}-web-sg"
+  })
+}
+
+# Security Group for App Tier
+resource "aws_security_group" "app" {
+  name        = "${var.vpc_name}-app-sg"
+  description = "Security group for application servers"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description     = "Custom App traffic from Web Tier"
+    from_port       = 8080 
+    to_port         = 8080
+    protocol        = "tcp"
+    security_groups = [aws_security_group.web.id]
+  }
+
+  ingress {
+    description = "SSH from within VPC"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  egress {
+    description = "All outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.vpc_name}-app-sg"
   })
 }

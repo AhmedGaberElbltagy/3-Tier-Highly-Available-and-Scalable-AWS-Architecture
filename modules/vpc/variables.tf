@@ -25,11 +25,6 @@ variable "public_subnet_cidrs" {
   default     = ["10.10.100.0/24", "10.10.200.0/24"]
 }
 
-variable "database_subnet_cidrs" {
-  type        = list(string)
-  description = "List of database subnet CIDR blocks"
-  default     = ["10.10.30.0/24", "10.10.40.0/24"]
-}
 
 variable "tags" {
   description = "Tags to apply to resources"

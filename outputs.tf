@@ -13,9 +13,14 @@ output "public_subnet_ids" {
   value       = module.vpc.public_subnet_ids
 }
 
-output "ec2_instance_ids" {
-  description = "IDs of the EC2 instances"
-  value       = module.ec2.instance_ids
+output "web_server_instance_ids" {
+  description = "IDs of the web server EC2 instances"
+  value       = module.ec2.web_server_instance_ids
+}
+
+output "app_server_instance_ids" {
+  description = "IDs of the app server EC2 instances"
+  value       = module.ec2.app_server_instance_ids
 }
 
 output "alb_dns_name" {

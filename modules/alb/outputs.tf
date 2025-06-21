@@ -1,6 +1,11 @@
-output "target_group_arn" {
-  description = "The ARN of the target group"
-  value       = aws_lb_target_group.main.arn
+output "web_target_group_arn" {
+  description = "The ARN of the web target group"
+  value       = aws_lb_target_group.web_tg.arn
+}
+
+output "app_target_group_arn" {
+  description = "The ARN of the app target group"
+  value       = aws_lb_target_group.app_tg.arn
 }
 
 output "alb_dns_name" {

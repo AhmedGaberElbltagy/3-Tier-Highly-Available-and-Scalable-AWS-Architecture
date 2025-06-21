@@ -91,29 +91,30 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 module "ec2" {
   source = "./modules/ec2"
 
-  instance_type        = var.instance_type
-  key_name             = var.key_name
-  private_subnet_ids   = module.vpc.private_subnet_ids
-  public_subnet_ids    = module.vpc.public_subnet_ids
-  security_group_id    = module.vpc.ec2_security_group_id
-  availability_zones   = data.aws_availability_zones.available.names
-  iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
-
-  tags = var.common_tags
+  instance_type         = var.instance_type
+  key_name              = var.key_name
+  private_subnet_ids    = module.vpc.private_subnet_ids
+  public_subnet_ids     = module.vpc.public_subnet_ids
+  web_security_group_id = module.vpc.web_security_group_id
+  app_security_group_id = module.vpc.app_security_group_id
+  availability_zones    = data.aws_availability_zones.available.names
+  iam_instance_profile  = aws_iam_instance_profile.ec2_profile.name
+  tags                  = var.common_tags
 }
 
 # ALB Module
 module "alb" {
   source = "./modules/alb"
 
-  alb_name              = var.alb_name
-  target_group_name     = var.target_group_name
-  vpc_id                = module.vpc.vpc_id
-  public_subnet_ids     = module.vpc.public_subnet_ids
-  alb_security_group_id = module.vpc.alb_security_group_id
-  instance_ids          = module.ec2.instance_ids
-
-  tags = var.common_tags
+  alb_name                = "${var.project_name}-alb"
+  web_target_group_name   = "${var.project_name}-web-tg"
+  app_target_group_name   = "${var.project_name}-app-tg"
+  vpc_id                  = module.vpc.vpc_id
+  public_subnet_ids       = module.vpc.public_subnet_ids
+  alb_security_group_id   = module.vpc.alb_security_group_id
+  web_server_instance_ids = module.ec2.web_server_instance_ids
+  app_server_instance_ids = module.ec2.app_server_instance_ids
+  tags                    = var.common_tags
 }
 
 

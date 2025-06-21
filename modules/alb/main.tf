@@ -10,8 +10,8 @@ resource "aws_lb" "main" {
   })
 }
 
-resource "aws_lb_target_group" "main" {
-  name     = var.target_group_name
+resource "aws_lb_target_group" "web_tg" {
+  name     = var.web_target_group_name
   port     = 80
   protocol = "HTTP"
   vpc_id   = var.vpc_id
@@ -20,31 +20,87 @@ resource "aws_lb_target_group" "main" {
     path                = "/"
     protocol            = "HTTP"
     matcher             = "200"
-    interval            = 30
-    timeout             = 5
+    interval            = 15
+    timeout             = 3
     healthy_threshold   = 2
     unhealthy_threshold = 2
   }
 
-  tags = merge(var.tags, {
-    Name = var.target_group_name
-  })
+  tags = var.tags
 }
 
-resource "aws_lb_listener" "http" {
+resource "aws_lb_target_group" "app_tg" {
+  name     = var.app_target_group_name
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = var.vpc_id
+
+  health_check {
+    path                = "/health"
+    protocol            = "HTTP"
+    matcher             = "200"
+    interval            = 15
+    timeout             = 3
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
+
+  tags = var.tags
+}
+
+resource "aws_lb_listener" "listener" {
   load_balancer_arn = aws_lb.main.arn
-  port              = "80"
+  port              = 80
   protocol          = "HTTP"
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.main.arn
+    target_group_arn = aws_lb_target_group.web_tg.arn
   }
 }
 
-resource "aws_lb_target_group_attachment" "app" {
-  count            = length(var.instance_ids)
-  target_group_arn = aws_lb_target_group.main.arn
-  target_id        = var.instance_ids[count.index]
+resource "aws_lb_listener_rule" "api_submit_rule" {
+  listener_arn = aws_lb_listener.listener.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/submit"]
+    }
+  }
+}
+
+resource "aws_lb_listener_rule" "api_submissions_rule" {
+  listener_arn = aws_lb_listener.listener.arn
+  priority     = 101
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/submissions"]
+    }
+  }
+}
+
+resource "aws_lb_target_group_attachment" "web_attachment" {
+  count            = length(var.web_server_instance_ids)
+  target_group_arn = aws_lb_target_group.web_tg.arn
+  target_id        = var.web_server_instance_ids[count.index]
   port             = 80
+}
+
+resource "aws_lb_target_group_attachment" "app_attachment" {
+  count            = length(var.app_server_instance_ids)
+  target_group_arn = aws_lb_target_group.app_tg.arn
+  target_id        = var.app_server_instance_ids[count.index]
+  port             = 8080
 }

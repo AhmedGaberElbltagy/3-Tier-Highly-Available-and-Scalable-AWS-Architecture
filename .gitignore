@@ -1,0 +1,25 @@
+# Terraform state files
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+*.tfstate.*
+
+# Terraform plan files
+tfplan
+*.tfplan
+
+# Terraform variables
+*.tfvars
+*.tfvars.json
+
+# Terraform crash log
+crash.log
+
+# Terraform working directory
+.terraform/
+
+# SSH keys
+*.pem
+
+# Environment variables
+.env

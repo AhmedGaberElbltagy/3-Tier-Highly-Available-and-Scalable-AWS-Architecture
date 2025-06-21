@@ -3,8 +3,13 @@ variable "alb_name" {
   type        = string
 }
 
-variable "target_group_name" {
-  description = "Name of the target group"
+variable "web_target_group_name" {
+  description = "The name of the web target group."
+  type        = string
+}
+
+variable "app_target_group_name" {
+  description = "The name of the app target group."
   type        = string
 }
 
@@ -23,9 +28,15 @@ variable "alb_security_group_id" {
   type        = string
 }
 
-variable "instance_ids" {
-  description = "List of EC2 instance IDs to attach to the target group"
+variable "web_server_instance_ids" {
+  description = "A list of web server instance IDs to attach to the web target group."
   type        = list(string)
+}
+
+variable "app_server_instance_ids" {
+  description = "A list of app server instance IDs to attach to the app target group."
+  type        = list(string)
+  default     = []
 }
 
 variable "tags" {
