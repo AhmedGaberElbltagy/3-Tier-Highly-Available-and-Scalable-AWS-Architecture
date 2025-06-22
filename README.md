@@ -65,3 +65,20 @@ This project is organized into the following Terraform modules:
 -   **`vpc`**: Creates the VPC, subnets (public and private), NAT Gateway, Internet Gateway, and route tables.
 -   **`alb`**: Sets up the public-facing Application Load Balancer and an internal Application Load Balancer, along with their listeners and target groups.
 -   **`ec2`**: Configures the Auto Scaling Groups and Launch Configurations for both the web and application tiers. It also includes the user data scripts for bootstrapping the instances. 
+
+## Traffic Flow
+### Step 1: DNS Lookup
+A user types your website's address (e.g., www.your-app.com, which points to the ALB's DNS name) into their browser.
+The browser performs a DNS lookup to translate this friendly domain name into the public IP address of your Public Application Load Balancer (ALB).
+### Step 2: Request to the Public ALB
+The user's request travels across the internet and enters your AWS VPC through the Internet Gateway.
+The request arrives at the Public ALB. The ALB's listener, which is listening on port 80 (HTTP), accepts the request.
+The ALB's Security Group (alb-sg) acts as the first firewall, ensuring the request is on a valid port (80 or 443).
+### Step 3: Forwarding to the Web Tier
+The Public ALB checks its rules. Since this is a request for the main page (e.g., path is /), the default rule matches.
+The default rule is configured to forward traffic to the Web Tier Target Group (web-tg).
+The ALB selects a healthy EC2 instance from the Web Tier Auto Scaling Group.
+### Step 4: Web Server Processes the Request
+The request arrives at an NGINX web server in a public subnet.
+The Web Tier's Security Group (web-sg) acts as the second firewall, allowing the incoming traffic only from the Public ALB's security group.
+The NGINX server finds the requested file (e.g., index.html) and prepares to send it back. 
