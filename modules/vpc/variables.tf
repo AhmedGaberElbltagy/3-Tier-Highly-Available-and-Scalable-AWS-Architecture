@@ -1,7 +1,19 @@
-variable "vpc_name" {
-  description = "prod-application-vpc"
+variable "project_name" {
+  description = "The name of the project"
   type        = string
 }
+
+variable "environment" {
+  description = "The environment (e.g., 'dev', 'prod')"
+  type        = string
+}
+
+variable "vpc_name" {
+  description = "The name of the VPC"
+  type        = string
+  default     = "main"
+}
+
 variable "vpc_cidr" {
   description = "10.10.0.0/16"
   type        = string

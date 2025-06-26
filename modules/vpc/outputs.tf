@@ -43,6 +43,16 @@ output "app_security_group_id" {
   value       = aws_security_group.app.id
 }
 
+output "app_sg_id" {
+  description = "The ID of the application security group"
+  value       = aws_security_group.app_sg.id
+}
+
+output "rds_sg_id" {
+  description = "The ID of the RDS security group"
+  value       = aws_security_group.rds_sg.id
+}
+
 output "internal_alb_security_group_id" {
   value = aws_security_group.internal_alb_sg.id
 }
